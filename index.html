@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You ♡</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@300;400;600&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & VARS ─────────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --cream:     #FFF8F0;
+  --blush:     #FCEEF3;
+  --rose:      #E8A0BF;
+  --rose-mid:  #D4789E;
+  --rose-deep: #B85580;
+  --plum:      #7A3B5E;
+  --gold:      #D4A853;
+  --gold-lt:   #F0D88A;
+  --brown:     #5C3D2E;
+  --text:      #4A3728;
+  --text-lt:   #9B7B6A;
+  --night:     #1a0d2e;
+  --night-mid: #2d1b3d;
+}
+
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--cream);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── CURSOR ───────────────────────────────────────────────── */
+.c-dot {
+  position:fixed; width:8px; height:8px;
+  background: var(--rose-deep); border-radius:50%;
+  pointer-events:none; z-index:10000;
+  transform:translate(-50%,-50%);
+}
+.c-ring {
+  position:fixed; width:30px; height:30px;
+  border:1.5px solid var(--rose); border-radius:50%;
+  pointer-events:none; z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:width .2s, height .2s, border-color .2s;
+}
+.c-ring.big { width:50px; height:50px; border-color:var(--rose-deep); }
+
+/* ── CANVAS LAYERS ────────────────────────────────────────── */
+#petal-canvas, #confetti-canvas {
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+}
+#confetti-canvas { z-index:200; display:none; }
+
+/* ── PROGRESS BAR ─────────────────────────────────────────── */
+#prog {
+  position:fixed; top:0; left:0; height:3px; z-index:1000;
+  background:linear-gradient(90deg,var(--rose),var(--rose-deep),var(--gold));
+  width:0%; transition:width .1s;
+}
+
+/* ── FLOATING HEARTS ──────────────────────────────────────── */
+.flt-heart {
+  position:fixed; pointer-events:none; z-index:50;
+  animation:floatUp 2s ease-out forwards;
+  font-size:1.1rem; user-select:none;
+}
+@keyframes floatUp {
+  0%   { opacity:1; transform:translateY(0) scale(1) rotate(0deg); }
+  100% { opacity:0; transform:translateY(-130px) scale(.4) rotate(15deg); }
+}
+
+/* ── FADE-UP ANIMATION ────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(22px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── SECTION BASICS ───────────────────────────────────────── */
+section { position:relative; z-index:1; }
+
+.sec-hdr { opacity:0; transform:translateY(24px); transition:opacity .7s, transform .7s; }
+.sec-hdr.in { opacity:1; transform:translateY(0); }
+
+.sec-title {
+  font-family:'Cormorant Garamond', serif;
+  font-size:clamp(2rem,5vw,3.5rem);
+  font-weight:300; text-align:center;
+  color:var(--brown); line-height:1.1;
+  margin-bottom:.4rem;
+}
+.sec-title em { font-style:italic; color:var(--rose-deep); }
+
+.sec-sub {
+  text-align:center; font-size:.875rem;
+  color:var(--text-lt); font-style:italic;
+  margin-bottom:3.5rem;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SECTION 1 – HERO / ENVELOPE
+══════════════════════════════════════════════════════════ */
+#hero {
+  min-height:100vh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:2rem; text-align:center;
+}
+
+.hero-top {
+  font-family:'Dancing Script', cursive;
+  font-size:clamp(1.2rem,3vw,1.8rem);
+  color:var(--rose-mid); margin-bottom:3rem;
+  opacity:0; animation:fadeUp 1s ease .4s forwards;
+}
+
+/* Envelope */
+.env-wrap {
+  position:relative; width:300px; height:220px;
+  cursor:pointer;
+  opacity:0; transform:translateY(30px) scale(.92);
+  animation:fadeUp 1s ease .9s forwards, envFloat 4s ease-in-out 2.5s infinite;
+}
+@keyframes envFloat {
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-14px); }
+}
+
+.env-body {
+  width:100%; height:100%; position:absolute; bottom:0;
+  background:linear-gradient(145deg,#fff5f8,#ffeef5);
+  border-radius:8px; border:2px solid var(--rose);
+  box-shadow:0 20px 60px rgba(200,100,140,.18);
+  overflow:visible;
+}
+
+/* Flap using clip-path */
+.env-flap {
+  position:absolute; top:0; left:-2px; right:-2px;
+  height:120px;
+  clip-path:polygon(0 0,50% 62%,100% 0);
+  background:linear-gradient(170deg,#fce4ec,#f8bbd0);
+  border-top-left-radius:8px; border-top-right-radius:8px;
+  transform-origin:top center;
+  transition:transform .85s cubic-bezier(.4,0,.2,1);
+  z-index:3;
+}
+.env-flap.open { transform:rotateX(185deg); }
+
+.env-left {
+  position:absolute; inset:0;
+  clip-path:polygon(0 0,52% 50%,0 100%);
+  background:linear-gradient(90deg,#f5c6d8,#fce4ec);
+  z-index:1;
+}
+.env-right {
+  position:absolute; inset:0;
+  clip-path:polygon(100% 0,48% 50%,100% 100%);
+  background:linear-gradient(270deg,#f5c6d8,#fce4ec);
+  z-index:1;
+}
+.env-bot {
+  position:absolute; bottom:-2px; left:-2px; right:-2px;
+  height:120px;
+  clip-path:polygon(0 100%,50% 38%,100% 100%);
+  background:linear-gradient(10deg,#f8bbd0,#fce4ec);
+  border-bottom-left-radius:8px; border-bottom-right-radius:8px;
+  z-index:1;
+}
+
+.env-seal {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  font-size:2rem; z-index:4;
+  filter:drop-shadow(0 2px 6px rgba(200,100,140,.35));
+  transition:opacity .3s; pointer-events:none;
+}
+
+/* Letter peeking */
+.letter-peek {
+  position:absolute; bottom:16px; left:50%;
+  transform:translateX(-50%);
+  width:220px; height:150px;
+  background:linear-gradient(160deg,#fffbf0,#fff8f0);
+  border-radius:4px; z-index:2;
+  box-shadow:0 -4px 16px rgba(0,0,0,.06);
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+  transition:transform .85s cubic-bezier(.4,0,.2,1) .45s;
+}
+.letter-peek.up { transform:translateX(-50%) translateY(-85px); }
+.letter-peek::after {
+  content:'';
+  position:absolute; top:26px; left:18px; right:18px; height:1px;
+  background:var(--rose); opacity:.2;
+  box-shadow:0 18px 0 rgba(232,160,191,.2),0 36px 0 rgba(232,160,191,.2),
+             0 54px 0 rgba(232,160,191,.2),0 72px 0 rgba(232,160,191,.2);
+}
+.peek-txt {
+  font-family:'Dancing Script',cursive;
+  font-size:1.05rem; color:var(--rose-mid);
+  text-align:center; padding:1rem;
+  position:relative; z-index:1;
+  opacity:0; transition:opacity .5s ease 1.3s;
+}
+.peek-txt.show { opacity:1; }
+
+.hero-hint {
+  margin-top:2rem; font-size:.85rem;
+  color:var(--text-lt); font-style:italic;
+  opacity:0; animation:fadeUp 1s ease 1.8s forwards;
+}
+
+/* Scroll indicator */
+.scroll-ind {
+  position:absolute; bottom:2rem; left:50%;
+  transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:.5rem;
+  opacity:0; transition:opacity .6s; font-size:.75rem; color:var(--text-lt);
+}
+.scroll-ind.show { opacity:1; }
+.s-arrow {
+  width:18px; height:18px;
+  border-right:2px solid var(--rose); border-bottom:2px solid var(--rose);
+  transform:rotate(45deg);
+  animation:sBounce 1.6s ease-in-out infinite;
+}
+@keyframes sBounce {
+  0%,100% { transform:rotate(45deg) translateY(0); }
+  50%      { transform:rotate(45deg) translateY(6px); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   SECTION 2 – LETTER / PAPER
+══════════════════════════════════════════════════════════ */
+#letter {
+  min-height:100vh; display:flex;
+  align-items:center; justify-content:center;
+  padding:5rem 2rem;
+}
+
+.paper {
+  max-width:660px; width:100%;
+  background:#fffcf7; border-radius:4px;
+  padding:4rem 3.5rem;
+  box-shadow:
+    0 1px 1px rgba(0,0,0,.1),
+    0 4px 10px rgba(0,0,0,.07),
+    0 16px 40px rgba(0,0,0,.05),
+    0 0 0 1px rgba(212,168,83,.14);
+  position:relative;
+  opacity:0; transform:translateY(40px);
+  transition:opacity .8s ease, transform .8s ease;
+}
+.paper.in { opacity:1; transform:translateY(0); }
+
+/* ruled lines */
+.paper::before {
+  content:''; position:absolute; inset:0; border-radius:4px;
+  background-image:repeating-linear-gradient(
+    transparent, transparent 31px,
+    rgba(212,168,83,.1) 31px, rgba(212,168,83,.1) 32px
+  );
+  pointer-events:none;
+}
+/* margin line */
+.paper::after {
+  content:''; position:absolute; top:0; left:82px;
+  width:1px; height:100%;
+  background:rgba(232,160,191,.22); pointer-events:none;
+}
+
+.p-date {
+  font-family:'Dancing Script',cursive;
+  font-size:.95rem; color:var(--text-lt);
+  text-align:right; margin-bottom:1.5rem;
+}
+.p-dear {
+  font-family:'Dancing Script',cursive;
+  font-size:2rem; color:var(--rose-deep);
+  margin-bottom:1.5rem;
+}
+.p-body {
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.15rem; line-height:2rem;
+  color:var(--text); font-weight:300;
+}
+.p-body p { margin-bottom:1.5rem; }
+.p-body p:last-child { margin-bottom:0; }
+.p-sign {
+  font-family:'Dancing Script',cursive;
+  font-size:2.1rem; color:var(--rose-deep);
+  text-align:right; margin-top:2rem;
+  opacity:0; transform:translateY(8px);
+  transition:opacity 1s ease, transform 1s ease;
+}
+.p-sign.in { opacity:1; transform:translateY(0); }
+
+/* blinking caret */
+.caret {
+  display:inline-block; width:2px; height:1.1em;
+  background:var(--rose-deep); vertical-align:text-bottom;
+  margin-left:1px; animation:cBlink 1s step-end infinite;
+}
+@keyframes cBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ══════════════════════════════════════════════════════════
+   SECTION 3 – FLIP CARDS
+══════════════════════════════════════════════════════════ */
+#change {
+  padding:6rem 2rem;
+  background:linear-gradient(180deg,var(--cream) 0%,var(--blush) 50%,var(--cream) 100%);
+}
+
+.flip-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:1.25rem; max-width:900px; margin:0 auto;
+}
+
+.flip-card {
+  height:195px; perspective:1000px; cursor:pointer;
+  opacity:0; transform:translateY(28px);
+  transition:opacity .5s ease, transform .5s ease;
+}
+.flip-card.in { opacity:1; transform:translateY(0); }
+
+.flip-inner {
+  position:relative; width:100%; height:100%;
+  transform-style:preserve-3d;
+  transition:transform .72s cubic-bezier(.4,0,.2,1);
+}
+.flip-card:hover .flip-inner,
+.flip-card.flipped .flip-inner { transform:rotateY(180deg); }
+
+.flip-front, .flip-back {
+  position:absolute; inset:0; backface-visibility:hidden;
+  border-radius:14px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:1.5rem; text-align:center;
+}
+.flip-front {
+  background:#fff;
+  border:1.5px solid rgba(232,160,191,.5);
+  box-shadow:0 4px 18px rgba(200,100,140,.08);
+}
+.flip-back {
+  background:linear-gradient(135deg,var(--rose-deep),var(--plum));
+  transform:rotateY(180deg);
+  color:#fff;
+  box-shadow:0 8px 30px rgba(200,100,140,.3);
+}
+
+.f-icon   { font-size:2rem; margin-bottom:.7rem; }
+.f-title  { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:500; color:var(--rose-deep); margin-bottom:.35rem; }
+.f-sub    { font-size:.8rem; color:var(--text-lt); line-height:1.4; }
+.b-title  { font-family:'Dancing Script',cursive; font-size:1.4rem; font-weight:700; margin-bottom:.45rem; }
+.b-text   { font-size:.83rem; opacity:.92; line-height:1.55; }
+
+.flip-note { text-align:center; font-size:.78rem; color:var(--text-lt); margin-top:1.2rem; font-style:italic; }
+
+/* ══════════════════════════════════════════════════════════
+   SECTION 4 – PROMISES
+══════════════════════════════════════════════════════════ */
+#promises { padding:6rem 2rem; }
+
+.pr-list {
+  max-width:610px; margin:0 auto;
+  display:flex; flex-direction:column; gap:.9rem;
+}
+
+.pr-item {
+  display:flex; align-items:flex-start; gap:1rem;
+  padding:1.2rem 1.4rem; background:#fff;
+  border-radius:14px;
+  border:1px solid rgba(232,160,191,.28);
+  box-shadow:0 2px 12px rgba(200,100,140,.05);
+  cursor:pointer;
+  opacity:0; transform:translateX(-28px);
+  transition:opacity .5s ease, transform .5s ease,
+             box-shadow .25s, border-color .25s;
+}
+.pr-item.in  { opacity:1; transform:translateX(0); }
+.pr-item:hover { box-shadow:0 4px 20px rgba(200,100,140,.14); border-color:var(--rose); }
+
+.pr-check {
+  width:28px; height:28px; border-radius:50%;
+  border:2px solid var(--rose); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.75rem; color:transparent;
+  transition:all .3s ease;
+}
+.pr-item.ticked .pr-check {
+  background:var(--rose-deep); border-color:var(--rose-deep);
+  color:#fff; transform:scale(1.1);
+}
+
+.pr-text {
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.12rem; color:var(--text);
+  padding-top:3px; line-height:1.4;
+  transition:color .3s;
+}
+.pr-item.ticked .pr-text { color:var(--rose-deep); }
+
+/* ══════════════════════════════════════════════════════════
+   SECTION 5 – STARS (NIGHT SKY)
+══════════════════════════════════════════════════════════ */
+#love {
+  padding:6rem 2rem;
+  background:radial-gradient(ellipse at 50% 40%,#2d1b3d 0%,#1a0d2e 55%,#0d0818 100%);
+  min-height:85vh;
+}
+#love .sec-title { color:#f8d7ea; }
+#love .sec-sub   { color:rgba(255,255,255,.45); }
+
+.stars-wrap {
+  position:relative; max-width:700px; height:480px;
+  margin:0 auto;
+}
+
+.star-pt {
+  position:absolute; cursor:pointer;
+  transform:translate(-50%,-50%);
+  transition:transform .2s;
+}
+.star-pt:hover { transform:translate(-50%,-50%) scale(1.4); }
+
+.star-dot {
+  width:10px; height:10px; border-radius:50%;
+  background:#fff9c4;
+  box-shadow:0 0 8px 4px rgba(255,249,196,.4),0 0 20px 8px rgba(255,236,153,.15);
+  animation:twinkle var(--td,2s) ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%    {opacity:.4;transform:scale(.65)}
+}
+
+.star-lbl {
+  position:absolute; white-space:nowrap;
+  background:rgba(26,13,46,.96); color:#f8d7ea;
+  padding:.45rem .9rem; border-radius:20px;
+  font-size:.78rem; pointer-events:none;
+  border:1px solid rgba(232,160,191,.3);
+  opacity:0;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%) scale(.7) translateY(0px);
+  transition:opacity .3s, transform .3s;
+}
+.star-pt:hover .star-lbl {
+  opacity:1;
+  transform:translate(-50%,calc(-50% - 38px)) scale(1);
+}
+
+.const-svg {
+  position:absolute; inset:0; width:100%; height:100%;
+  pointer-events:none;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SECTION 6 – HEART JAR
+══════════════════════════════════════════════════════════ */
+#jar { padding:6rem 2rem; background:var(--blush); text-align:center; }
+
+.jar-msg {
+  font-family:'Dancing Script',cursive;
+  font-size:1.3rem; color:var(--rose-mid);
+  margin-bottom:2rem; min-height:2rem;
+  transition:all .4s;
+}
+
+.jar-outer {
+  position:relative; width:180px; height:250px;
+  margin:0 auto 1.4rem; cursor:pointer;
+  user-select:none;
+}
+.jar-outer:active { transform:scale(.97); }
+
+/* lid */
+.j-lid {
+  position:absolute; top:0; left:50%;
+  transform:translateX(-50%);
+  width:110px; height:22px;
+  background:var(--rose-mid); border-radius:6px 6px 0 0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.6rem; font-weight:700; color:#fff;
+  letter-spacing:.04em;
+}
+/* neck */
+.j-neck {
+  position:absolute; top:18px; left:50%;
+  transform:translateX(-50%);
+  width:86px; height:28px;
+  background:rgba(255,255,255,.55);
+  border:2.5px solid var(--rose); border-bottom:none;
+  border-radius:6px 6px 0 0;
+}
+/* body */
+.j-body {
+  position:absolute; bottom:0; left:50%;
+  transform:translateX(-50%);
+  width:150px; height:205px;
+  background:rgba(255,255,255,.55);
+  border:2.5px solid var(--rose);
+  border-radius:10px 10px 22px 22px;
+  overflow:hidden;
+  backdrop-filter:blur(3px);
+}
+.j-fill {
+  position:absolute; bottom:0; left:0; right:0;
+  background:linear-gradient(180deg,rgba(232,160,191,.4),rgba(200,120,160,.65));
+  height:0%; transition:height .5s cubic-bezier(.4,0,.2,1);
+}
+.j-hearts { position:absolute; inset:0; overflow:hidden; }
+
+.jar-cnt {
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.9rem; color:var(--rose-deep);
+  margin-bottom:.4rem;
+}
+.jar-note { font-size:.82rem; color:var(--text-lt); font-style:italic; }
+
+/* ══════════════════════════════════════════════════════════
+   SECTION 7 – FINAL
+══════════════════════════════════════════════════════════ */
+#final {
+  min-height:80vh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:6rem 2rem; text-align:center; overflow:hidden;
+}
+
+.final-q {
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.7rem,4.5vw,3rem);
+  font-weight:300; line-height:1.35;
+  max-width:700px; color:var(--brown);
+  margin-bottom:3rem;
+  opacity:0; transform:translateY(20px);
+  transition:opacity .9s ease, transform .9s ease;
+}
+.final-q.in { opacity:1; transform:translateY(0); }
+.final-q em { font-style:italic; color:var(--rose-deep); }
+
+.final-btn {
+  font-family:'Dancing Script',cursive;
+  font-size:1.5rem; color:var(--rose-deep);
+  background:none; border:2px solid var(--rose-deep);
+  padding:1rem 2.8rem; border-radius:50px; cursor:pointer;
+  transition:background .3s, color .3s, box-shadow .3s, transform .2s;
+  opacity:0; transform:translateY(20px);
+  animation:none; /* controlled by JS */
+}
+.final-btn.in { opacity:1; transform:translateY(0); transition:opacity .9s ease .35s, transform .9s ease .35s, background .3s, color .3s, box-shadow .3s; }
+.final-btn:hover {
+  background:var(--rose-deep); color:#fff;
+  box-shadow:0 8px 32px rgba(184,85,128,.38);
+  transform:translateY(-3px);
+}
+
+.final-small {
+  font-size:.88rem; color:var(--text-lt); margin-top:2rem;
+  font-style:italic;
+  opacity:0; transition:opacity 1s ease .8s;
+}
+.final-small.in { opacity:1; }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════ */
+@media (max-width:600px) {
+  .paper { padding:3rem 1.6rem; }
+  .paper::after { left:48px; }
+  .flip-grid { grid-template-columns:1fr; }
+  .stars-wrap { height:370px; }
+  body { cursor:auto; }
+  .c-dot, .c-ring { display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Utility layers ── -->
+<div id="prog"></div>
+<canvas id="petal-canvas"></canvas>
+<canvas id="confetti-canvas"></canvas>
+<div class="c-dot" id="cDot"></div>
+<div class="c-ring" id="cRing"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 1  –  HERO
+══════════════════════════════════════════════════════════ -->
+<section id="hero">
+  <p class="hero-top">I made you something…</p>
+
+  <div class="env-wrap" id="envWrap" onclick="openEnv()">
+    <div class="env-body">
+      <div class="env-flap" id="envFlap"></div>
+      <div class="env-left"></div>
+      <div class="env-right"></div>
+      <div class="env-bot"></div>
+      <div class="letter-peek" id="lPeek">
+        <div class="peek-txt" id="peekTxt">For you,<br>my love ♡</div>
+      </div>
+      <div class="env-seal" id="envSeal">💌</div>
+    </div>
+  </div>
+
+  <p class="hero-hint">↑ tap the envelope</p>
+
+  <div class="scroll-ind" id="scrollInd">
+    <div class="s-arrow"></div>
+    <span>scroll to read</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 2  –  LETTER
+══════════════════════════════════════════════════════════ -->
+<section id="letter">
+  <div class="paper" id="paper">
+    <div class="p-date" id="pDate"></div>
+    <div class="p-dear">My love,</div>
+    <div class="p-body">
+      <p id="lp1"></p>
+      <p id="lp2"></p>
+      <p id="lp3"></p>
+    </div>
+    <div class="p-sign" id="pSign"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 3  –  FLIP CARDS
+══════════════════════════════════════════════════════════ -->
+<section id="change">
+  <div class="sec-hdr" id="hChange">
+    <h2 class="sec-title">I was <em>wrong</em> about…</h2>
+    <p class="sec-sub">hover (or tap) each card to see what I'm doing instead ♡</p>
+  </div>
+
+  <div class="flip-grid" id="flipGrid">
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="f-icon">👂</div>
+          <div class="f-title">Not listening to you</div>
+          <div class="f-sub">I talked when I should have heard you</div>
+        </div>
+        <div class="flip-back">
+          <div class="b-title">I will listen first</div>
+          <div class="b-text">Your feelings come before my response. Every single time.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="f-icon">🚪</div>
+          <div class="f-title">Not showing up for you</div>
+          <div class="f-sub">I was absent when you needed presence</div>
+        </div>
+        <div class="flip-back">
+          <div class="b-title">I will be there</div>
+          <div class="b-text">Through good days, hard days, and every ordinary day in between.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="f-icon">🔥</div>
+          <div class="f-title">Letting my ego win</div>
+          <div class="f-sub">I chose pride over peace — over us</div>
+        </div>
+        <div class="flip-back">
+          <div class="b-title">Love over ego</div>
+          <div class="b-text">I choose you. Every argument. Every disagreement. Every time.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="f-icon">⏳</div>
+          <div class="f-title">Being impatient</div>
+          <div class="f-sub">I rushed you, dismissed you, overwhelmed you</div>
+        </div>
+        <div class="flip-back">
+          <div class="b-title">I will breathe first</div>
+          <div class="b-text">You deserve my calm, not my reactions. I'm learning that every day.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="f-icon">💬</div>
+          <div class="f-title">My hurtful words</div>
+          <div class="f-sub">I said things I can never fully unsay</div>
+        </div>
+        <div class="flip-back">
+          <div class="b-title">Words with care</div>
+          <div class="b-text">I will speak to you the way you've always deserved — gently, honestly, lovingly.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="f-icon">🌱</div>
+          <div class="f-title">Not growing for us</div>
+          <div class="f-sub">I got comfortable instead of becoming better</div>
+        </div>
+        <div class="flip-back">
+          <div class="b-title">I'm working on me</div>
+          <div class="b-text">Every day — not to win you back, but because you showed me who I should always have been.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="flip-note">tap each card on mobile ♡</p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 4  –  PROMISES
+══════════════════════════════════════════════════════════ -->
+<section id="promises">
+  <div class="sec-hdr" id="hProm">
+    <h2 class="sec-title">My <em>promises</em> to you</h2>
+    <p class="sec-sub">click each one — I mean every word</p>
+  </div>
+
+  <div class="pr-list">
+    <div class="pr-item" onclick="tickPr(this)">
+      <div class="pr-check">✓</div>
+      <div class="pr-text">I will communicate — even when it's uncomfortable and scary</div>
+    </div>
+    <div class="pr-item" onclick="tickPr(this)">
+      <div class="pr-check">✓</div>
+      <div class="pr-text">I will be your safe place, not another source of stress</div>
+    </div>
+    <div class="pr-item" onclick="tickPr(this)">
+      <div class="pr-check">✓</div>
+      <div class="pr-text">I will never stop working on becoming a better man — for you, for us</div>
+    </div>
+    <div class="pr-item" onclick="tickPr(this)">
+      <div class="pr-check">✓</div>
+      <div class="pr-text">I will show you love through actions, not just words</div>
+    </div>
+    <div class="pr-item" onclick="tickPr(this)">
+      <div class="pr-check">✓</div>
+      <div class="pr-text">I will never take you — or your love — for granted again</div>
+    </div>
+    <div class="pr-item" onclick="tickPr(this)">
+      <div class="pr-check">✓</div>
+      <div class="pr-text">I will choose us, every single day, without hesitation</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 5  –  NIGHT SKY STARS
+══════════════════════════════════════════════════════════ -->
+<section id="love">
+  <div class="sec-hdr" id="hLove">
+    <h2 class="sec-title">Things I <em>love</em> about you</h2>
+    <p class="sec-sub">hover each star to discover ♡</p>
+  </div>
+  <div class="stars-wrap" id="starsWrap">
+    <svg class="const-svg" id="constSvg"></svg>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 6  –  HEART JAR
+══════════════════════════════════════════════════════════ -->
+<section id="jar">
+  <div class="sec-hdr" id="hJar">
+    <h2 class="sec-title">A jar full of <em>love</em></h2>
+    <p class="sec-sub">keep clicking — this is how much love I have for you</p>
+  </div>
+
+  <div class="jar-msg" id="jarMsg">Every click is a promise ♡</div>
+
+  <div class="jar-outer" id="jarOuter" onclick="addHeart()">
+    <div class="j-lid">♡ sealed with love</div>
+    <div class="j-neck"></div>
+    <div class="j-body">
+      <div class="j-fill" id="jFill"></div>
+      <div class="j-hearts" id="jHearts"></div>
+    </div>
+  </div>
+
+  <div class="jar-cnt"><span id="hCnt">0</span> hearts</div>
+  <div class="jar-note" id="jarNote">each click = a moment I'll do better</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 7  –  FINAL
+══════════════════════════════════════════════════════════ -->
+<section id="final">
+  <p class="final-q" id="finalQ">
+    I'm not asking you to forget.<br>
+    I'm asking you to let me show you<br>
+    that <em>I can be the person you deserve.</em>
+  </p>
+
+  <button class="final-btn" id="finalBtn" onclick="celebrate()">
+    Give me a chance ♡
+  </button>
+
+  <p class="final-small" id="finalSmall">
+    — Made for you, with everything I have
+  </p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+/* ─── CURSOR ─────────────────────────────────────────── */
+const cDot = document.getElementById('cDot');
+const cRing = document.getElementById('cRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cDot.style.left = mx+'px'; cDot.style.top = my+'px';
+});
+
+(function ringLoop(){
+  rx += (mx-rx)*.14; ry += (my-ry)*.14;
+  cRing.style.left = rx+'px'; cRing.style.top = ry+'px';
+  requestAnimationFrame(ringLoop);
+})();
+
+document.querySelectorAll('.flip-card,.pr-item,.env-wrap,.jar-outer,.star-pt,.final-btn').forEach(el=>{
+  el.addEventListener('mouseenter',()=>cRing.classList.add('big'));
+  el.addEventListener('mouseleave',()=>cRing.classList.remove('big'));
+});
+
+/* click → float heart (everywhere except jar) */
+document.addEventListener('click', e=>{
+  if(e.target.closest('#jarOuter')) return;
+  spawnHeart(e.clientX, e.clientY);
+});
+
+function spawnHeart(x, y, big=false){
+  const el = document.createElement('div');
+  el.className = 'flt-heart';
+  el.textContent = ['♡','♥','💕','💗','💖'][Math.random()*5|0];
+  el.style.cssText = `left:${x}px;top:${y}px;color:${'#E8A0BF,#D4789E,#B85580,#FFB3C6,#D4A853'.split(',')[Math.random()*5|0]};font-size:${big?2:1.1}rem`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 2000);
+}
+
+/* ─── PETALS ─────────────────────────────────────────── */
+const PC = document.getElementById('petal-canvas');
+const PX = PC.getContext('2d');
+const resize = ()=>{ PC.width=innerWidth; PC.height=innerHeight; };
+resize(); addEventListener('resize', resize);
+
+class Petal {
+  constructor(init){
+    this.reset(init);
+  }
+  reset(init){
+    this.x  = Math.random()*PC.width;
+    this.y  = init ? Math.random()*PC.height : -18;
+    this.sz = Math.random()*8+4;
+    this.sp = Math.random()*1+.35;
+    this.dr = (Math.random()-.5)*.8;
+    this.ro = Math.random()*Math.PI*2;
+    this.rs = (Math.random()-.5)*.04;
+    this.al = Math.random()*.5+.15;
+    this.wb = Math.random()*Math.PI*2;
+    this.ws = Math.random()*.03+.01;
+    this.co = ['#fce4ec','#f8bbd0','#f48fb1','#ffd6e7','#ffe0ec'][Math.random()*5|0];
+  }
+  update(){
+    this.y+=this.sp; this.wb+=this.ws;
+    this.x+=this.dr+Math.sin(this.wb)*.5;
+    this.ro+=this.rs;
+    if(this.y>PC.height+20) this.reset();
+  }
+  draw(){
+    PX.save();
+    PX.translate(this.x,this.y); PX.rotate(this.ro);
+    PX.globalAlpha=this.al; PX.fillStyle=this.co;
+    PX.beginPath();
+    PX.ellipse(0,0,this.sz,this.sz*.5,0,0,Math.PI*2);
+    PX.fill(); PX.restore();
+  }
+}
+const petals = Array.from({length:38},(_,i)=>new Petal(true));
+(function petalLoop(){ PX.clearRect(0,0,PC.width,PC.height); petals.forEach(p=>{p.update();p.draw();}); requestAnimationFrame(petalLoop); })();
+
+/* ─── PROGRESS BAR ───────────────────────────────────── */
+addEventListener('scroll',()=>{
+  const max = document.body.scrollHeight-innerHeight;
+  document.getElementById('prog').style.width = (scrollY/max*100)+'%';
+});
+
+/* ─── ENVELOPE ───────────────────────────────────────── */
+let envDone = false;
+function openEnv(){
+  if(envDone) return; envDone=true;
+  document.getElementById('envFlap').classList.add('open');
+  document.getElementById('lPeek').classList.add('up');
+  document.getElementById('envSeal').style.opacity='0';
+  setTimeout(()=>document.getElementById('peekTxt').classList.add('show'), 900);
+  setTimeout(()=>document.getElementById('scrollInd').classList.add('show'), 1600);
+  /* sprinkle hearts */
+  const r = document.getElementById('envWrap').getBoundingClientRect();
+  for(let i=0;i<8;i++) setTimeout(()=>spawnHeart(r.left+r.width/2+((Math.random()-.5)*80), r.top+r.height*.4, true), i*120);
+}
+
+/* ─── DATE ───────────────────────────────────────────── */
+const mo=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const now=new Date();
+document.getElementById('pDate').textContent=`${mo[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+
+/* ─── INTERSECTION OBSERVER ──────────────────────────── */
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+},{ threshold:.14 });
+
+io.observe(document.getElementById('paper'));
+['hChange','hProm','hLove','hJar','finalQ','finalBtn','finalSmall'].forEach(id=>{
+  const el=document.getElementById(id); if(el) io.observe(el);
+});
+
+document.querySelectorAll('.flip-card').forEach((c,i)=>{
+  c.style.transitionDelay=`${i*.09}s`; io.observe(c);
+});
+document.querySelectorAll('.pr-item').forEach((p,i)=>{
+  p.style.transitionDelay=`${i*.11}s`; io.observe(p);
+});
+
+/* ─── TYPEWRITER ─────────────────────────────────────── */
+const lines = [
+  "I've been sitting here trying to find the perfect words — and I realize there are none. Nothing I write will undo the pain I caused. But I want you to know that I see it. I see what I did, and I see you — how strong you are, and how much I hurt someone who only ever deserved kindness from me.",
+  "I'm not the man I was when I hurt you. I'm working on that, quietly, every single day. Not to win you back — but because you showed me who I should have been all along. You made me want to be better, even when I failed to show it.",
+  "You don't owe me forgiveness. You don't owe me anything at all. But I hope that someday, when you're ready, you'll feel in your heart that every word here is real. That I mean this — completely, genuinely, with everything I have."
+];
+
+let twDone=false;
+document.getElementById('paper').addEventListener('transitionend', ()=>{
+  if(twDone) return; twDone=true;
+  const els=[document.getElementById('lp1'),document.getElementById('lp2'),document.getElementById('lp3')];
+  const cur=document.createElement('span'); cur.className='caret'; cur.textContent='|';
+  let li=0, ci=0;
+
+  function type(){
+    if(li>=els.length){
+      cur.remove();
+      setTimeout(()=>{
+        const s=document.getElementById('pSign');
+        s.textContent='— Always yours ♡'; s.classList.add('in');
+      },400);
+      return;
+    }
+    if(ci===0) els[li].appendChild(cur);
+    const ln=lines[li];
+    if(ci<ln.length){
+      els[li].insertBefore(document.createTextNode(ln[ci]),cur);
+      ci++;
+      setTimeout(type, Math.random()*18+16);
+    } else { li++; ci=0; setTimeout(type,320); }
+  }
+  type();
+},{once:true});
+
+/* ─── PROMISES ───────────────────────────────────────── */
+function tickPr(el){ el.classList.toggle('ticked'); }
+
+/* ─── STARS ──────────────────────────────────────────── */
+const msgs=[
+  "the way you laugh when you really mean it",
+  "your strength — even when you try to hide it",
+  "how deeply and fully you love",
+  "the way you find beauty in little things",
+  "your kindness to absolutely everyone",
+  "how you make me want to be a better person",
+  "your smile when you're genuinely happy",
+  "the care you give to everyone you love",
+  "everything about you I took for granted",
+  "the sound of your voice",
+  "how brave you are without even realising",
+  "you — simply, completely, you ♡"
+];
+
+function heartPt(t,sc,cx,cy){
+  const x=16*Math.pow(Math.sin(t),3);
+  const y=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));
+  return { x:cx+x*sc, y:cy+y*sc };
+}
+
+const sw=document.getElementById('starsWrap');
+const svg=document.getElementById('constSvg');
+const positions=msgs.map((_,i)=>heartPt(i/msgs.length*Math.PI*2,15,350,240));
+
+// dashed outline
+const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+path.setAttribute('d', positions.map((p,i)=>`${i?'L':'M'}${p.x} ${p.y}`).join(' ')+'Z');
+path.setAttribute('fill','none'); path.setAttribute('stroke','rgba(255,200,220,.12)');
+path.setAttribute('stroke-width','1'); path.setAttribute('stroke-dasharray','5 10');
+svg.appendChild(path);
+
+positions.forEach((pos,i)=>{
+  const div=document.createElement('div');
+  div.className='star-pt';
+  div.style.cssText=`left:${pos.x}px;top:${pos.y}px;--td:${1.5+Math.random()*2}s`;
+  div.innerHTML=`<div class="star-dot"></div><div class="star-lbl">${msgs[i]}</div>`;
+  sw.appendChild(div);
+});
+
+/* ─── JAR ────────────────────────────────────────────── */
+let hc=0; const MAX=60;
+const jMsgs=[
+  "Every click is a promise ♡",
+  "I'm sorry for every moment I wasn't enough…",
+  "…and for every time I made you feel small.",
+  "You deserve the whole world.",
+  "I want to give it to you.",
+  "This jar will never be full enough…",
+  "…because my love for you has no limit ♡"
+];
+
+function addHeart(){
+  if(hc>=MAX){ document.getElementById('jarMsg').textContent="Full — just like my heart is for you ♡"; return; }
+  hc++;
+  document.getElementById('hCnt').textContent=hc;
+
+  const pct=(hc/MAX)*100;
+  document.getElementById('jFill').style.height=pct+'%';
+
+  const mi=Math.min(Math.floor((hc/MAX)*(jMsgs.length-1)), jMsgs.length-1);
+  document.getElementById('jarMsg').textContent=jMsgs[mi];
+
+  // tiny heart inside jar
+  const h=document.createElement('div');
+  h.style.cssText=`position:absolute;left:${8+Math.random()*80}%;bottom:${3+Math.random()*(pct-3)}%;font-size:${.5+Math.random()*.5}rem;animation:floatUp 2s ease-out forwards;color:hsl(${320+Math.random()*40},70%,${55+Math.random()*20}%)`;
+  h.textContent='♡';
+  document.getElementById('jHearts').appendChild(h);
+  setTimeout(()=>h.remove(),2100);
+
+  // spawn float heart at jar position
+  const r=document.getElementById('jarOuter').getBoundingClientRect();
+  spawnHeart(r.left+r.width/2+(Math.random()-.5)*40, r.top+r.height/3);
+}
+
+/* ─── CONFETTI ───────────────────────────────────────── */
+const CC=document.getElementById('confetti-canvas');
+const CX=CC.getContext('2d');
+let pieces=[]; let cRunning=false;
+
+function celebrate(){
+  CC.width=innerWidth; CC.height=innerHeight;
+  CC.style.display='block';
+  for(let i=0;i<180;i++){
+    pieces.push({
+      x:Math.random()*CC.width, y:-20,
+      w:Math.random()*12+6, h:Math.random()*6+4,
+      col:['#E8A0BF','#D4A853','#B85580','#FFB3C6','#fff','#fce4ec','#f48fb1','#FFD6E7'][Math.random()*8|0],
+      sp:Math.random()*4+2, dr:(Math.random()-.5)*3,
+      ro:Math.random()*360, rs:(Math.random()-.5)*6, al:1
+    });
+  }
+  if(!cRunning){ cRunning=true; cLoop(); }
+  const btn=document.getElementById('finalBtn');
+  btn.textContent='Thank you for reading ♡';
+  btn.style.background='var(--rose-deep)';
+  btn.style.color='#fff';
+  btn.style.borderColor='var(--rose-deep)';
+  btn.onclick=null;
+  // big hearts burst
+  for(let i=0;i<12;i++) setTimeout(()=>spawnHeart(innerWidth/2+(Math.random()-.5)*300, innerHeight*.4+(Math.random()-.5)*100, true),i*80);
+}
+
+function cLoop(){
+  CX.clearRect(0,0,CC.width,CC.height);
+  pieces=pieces.filter(p=>{
+    p.y+=p.sp; p.x+=p.dr; p.ro+=p.rs;
+    if(p.y>CC.height) p.al-=.06;
+    CX.save();
+    CX.translate(p.x,p.y); CX.rotate(p.ro*Math.PI/180);
+    CX.globalAlpha=Math.max(0,p.al);
+    CX.fillStyle=p.col;
+    CX.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    CX.restore();
+    return p.al>0;
+  });
+  if(pieces.length) requestAnimationFrame(cLoop);
+  else { cRunning=false; setTimeout(()=>{CC.style.display='none';},400); }
+}
+</script>
+</body>
+</html>
